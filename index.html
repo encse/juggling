@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Juggler Game</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Spicy+Rice&display=swap" rel="stylesheet">
+
+    <style>
+        html {
+            font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #E4E4E1;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        .top {
+            position: absolute;
+            width:100%;
+            z-index: -1;
+            text-align: center;
+            color: white;
+            pointer-events: inherit;
+        }
+
+
+        .top a {
+            color: inherit;
+        }
+
+        .bottom {
+            position: absolute;
+            bottom: 0;
+            width:100%;
+        }
+
+        h1 {
+            font-family: "Spicy Rice", serif;
+            font-weight: 400;
+            font-style: normal;
+            font-size: 6em;
+            line-height: 0.5;
+        }
+
+        canvas {
+            pointer-events:none;
+            position: fixed;
+            top: 0; /* Align with the top */
+            left: 0; /* Align with the left */
+            width: 100vw; /* Full viewport width */
+            height: 100vh; /* Full viewport height */
+        }
+
+        .flow {
+            display: flex;
+            flex-direction: column;
+        }
+
+        #popupMessage {
+            display: none;
+            background-color: rgba(96, 123, 152, 0.8);
+            color: white;
+            padding: 20px;
+            font-size: 1.2em;
+            text-align: center;
+            opacity: 1;
+            transition: opacity 1s ease-out;
+        }
+
+        #popupMessage.show {
+            display: block;
+            /* Show the message */
+            opacity: 1;
+            /* Start fully opaque */
+        }
+
+        #popupMessage.fade-out {
+            opacity: 0;
+            /* Fade to transparent */
+        }
+    </style>
+</head>
+
+<body>
+    <div class="top">
+        <h1>Juggling</h1>
+        <h2>by <a href="https://github.com/encse">encse</a></h2>
+    </div>
+    <canvas id="gameCanvas"></canvas>
+    <div class="bottom">
+        <div id="popupMessage"></div>
+    </div>
+    <script src="game.js"></script>
+</body>
+
+</html>
