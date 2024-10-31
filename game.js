@@ -3,8 +3,6 @@ canvas.width = canvas.clientWidth;
 canvas.height = canvas.clientHeight;
 
 const ctx = canvas.getContext('2d');
-
-
 const gravity = 0.2
 
 const juggler = {
@@ -29,6 +27,7 @@ const tutorial = [
     {
         text: "Press →",
         check: [
+            {hand:"left"},
             {hand:"right"},
         ]
     },
@@ -36,16 +35,21 @@ const tutorial = [
         text: "then ←",
         check: [
             {hand:"left"},
+            {hand:"right"},
+            {hand:"left"},
         ]
     },
     {
         text: "and →",
         check: [
+            {hand:"left"},
+            {hand:"right"},
+            {hand:"left"},
             {hand:"right"},
         ]
     },
     {
-        text: "That's called a cascade, keep going!",
+        text: "Continue keeping one ball in the air!",
         ballsAlternating: true,
         check: [
             {hand:"left"},
@@ -63,7 +67,33 @@ const tutorial = [
         ]
     },
     {
-        text: "Make a snake: ← ← ←, → → →",
+        text: "That's called a cascade",
+        ballsAlternating: true,
+        check: [
+            {hand:"left"},
+            {hand:"right"},
+            {hand:"left"},
+            {hand:"right"},
+            {hand:"left"},
+            {hand:"right"},
+            {hand:"left"},
+            {hand:"right"},
+            {hand:"left"},
+            {hand:"right"},
+            {hand:"left"},
+            {hand:"right"},
+            {hand:"left"},
+            {hand:"right"},
+            {hand:"left"},
+            {hand:"right"},
+            {hand:"left"},
+            {hand:"right"},
+            {hand:"left"},
+            {hand:"right"},
+        ]
+    },
+    {
+        text: "Now make a snake: ← ← ←, → → →",
         ballsAlternating: true,
         check: [
             {hand:"left"},
