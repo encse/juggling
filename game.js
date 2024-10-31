@@ -27,20 +27,11 @@ const tutorial = [
     {
         text: "Press →",
         check: [
-            {hand:"left"},
             {hand:"right"},
         ]
     },
     {
-        text: "then ←",
-        check: [
-            {hand:"left"},
-            {hand:"right"},
-            {hand:"left"},
-        ]
-    },
-    {
-        text: "and →",
+        text: "← →  ← →",
         check: [
             {hand:"left"},
             {hand:"right"},
@@ -331,9 +322,10 @@ function updateJugglerHands() {
 }
 
 // Check ball collision with hand
-function closeToHand(ball, handX, handY) {
-    const dist = Math.sqrt((ball.x - handX) ** 2 + (ball.y - handY) ** 2);
-    return dist < ball.radius + juggler.handRadius;
+function closeToHand(ball, hand) {
+    const dist1 = Math.sqrt((ball.x - hand.x) ** 2 + (ball.y - hand.y) ** 2);
+    const dist2 = Math.sqrt((ball.x + ball.vx - hand.x) ** 2 + (ball.y + ball.vy - hand.y) ** 2);
+    return dist2 <= dist1 && dist1 < ball.radius + juggler.handRadius; 
 }
 
 
@@ -349,21 +341,19 @@ function updateBalls() {
             // Ball off-screen - Game over logic could be added here
             if (ball.y > canvas.clientHeight) {
                 ball.y = canvas.clientHeight - 50;
-                ball.vy = -ball.vy * 0.7;  // Bounce effect
+                ball.vy = -ball.vy * 0.7;
             }
 
-            // Check if the ball is caught by the left or right hand
-            if (closeToHand(ball, juggler.hands.left.x, juggler.hands.left.y) && ball.vy > 0) {
-                ball.caught = true;
-                ball.hand = 'left';
-                ball.vx = 0;
-                ball.vy = 0;
-            } else if (closeToHand(ball, juggler.hands.right.x, juggler.hands.right.y) && ball.vy > 0) {
-                ball.caught = true;
-                ball.hand = 'right';
-                ball.vx = 0;
-                ball.vy = 0;
+            // Check if the ball is caught
+            for (let hand of ['left', 'right']){
+                if (closeToHand(ball, juggler.hands[hand])) {
+                    ball.caught = true;
+                    ball.hand = hand;
+                    ball.vx = 0;
+                    ball.vy = 0;
+                }
             }
+             
         }
     });
 }
@@ -405,13 +395,15 @@ function releaseBall(hand, high, outer, up) {
     let vx = balls.length % 2 == 0 ? 0 : 1;
     let vy = high ? -10 : -8;
     let dx = inner ? +15 : -15;
-  
+
     if (up) {
         vy *= 1.1;
     }
+
     if (high) {
         vy *= 1.2;
     }
+
     if (inner) {
         vy *= 0.9;
     }
