@@ -49,7 +49,7 @@ const tutorial = [
         ]
     },
     {
-        text: "Continue keeping one ball in the air!",
+        text: "Keep one ball in the air, alternate hands!",
         ballsAlternating: true,
         check: [
             {hand:"left"},
