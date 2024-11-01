@@ -7,6 +7,12 @@ const gravity = 0.2
 let juggler = {};
 let balls = [];
 
+let tutorialStep = 0;
+const throwHistory = [];
+
+// Game loop control
+let lastTime = 0;
+
 function isMacOS() {
     return navigator.userAgentData?.platform === 'macOS';
 }
@@ -126,7 +132,7 @@ const cascadeTutorial = [{
 }];
 
 
-const browserTutorial = [
+const tutorial = [
     ...cascadeTutorial,
     {
         text: "Keep the rtythm. Now use <ALT> for outer throws",
@@ -255,14 +261,49 @@ const browserTutorial = [
             { hand: "left", inner: true, up: true },
             { hand: "left", inner: true, up: true },
             { hand: "left", inner: true, up: true },
-            { hand: "left", inner: false, up: true },
-            { hand: "left", inner: false, up: true },
-            { hand: "left", inner: false, up: true },
         ]
     },
 
     {
-        text: "Switch back to cascade: left-right-left-right",
+        text: "Switch hands now. Throw the balls up in your right.",
+        ballsAlternating: true,
+        check: [
+            { hand: "right", up: true },
+            { hand: "right", up: true },
+            { hand: "right", up: true },
+        ]
+    },
+
+    {
+        text: "Still in your right hand start throwing up one ball inside (<CTRL>), then one ball outside (<CTRL> <ALT>)",
+        ballsAlternating: true,
+        check: [
+            { hand: "right", up: true, inner: true},
+            { hand: "right", up: true, inner: false},
+            { hand: "right", up: true, inner: true},
+            { hand: "right", up: true, inner: false},
+        ]
+    },
+    {
+        text: "This is a mini-cascade in your right hand now! Keep going",
+        ballsAlternating: true,
+        check: [
+            { hand: "right", up: true, inner: true},
+            { hand: "right", up: true, inner: false},
+            { hand: "right", up: true, inner: true},
+            { hand: "right", up: true, inner: false},
+            { hand: "right", up: true, inner: true},
+            { hand: "right", up: true, inner: false},
+            { hand: "right", up: true, inner: true},
+            { hand: "right", up: true, inner: false},
+            { hand: "right", up: true, inner: true},
+            { hand: "right", up: true, inner: false},
+            { hand: "right", up: true, inner: true},
+            { hand: "right", up: true, inner: false},
+        ]
+    },
+    {
+        text: "Switch back to cascade now: left-right-left-right",
         ballsAlternating: true,
         check: [
             { hand: "left" },
@@ -301,6 +342,97 @@ const browserTutorial = [
             { hand: "right", up: false },
         ]
     },
+
+    {
+        text: "Try up-up-toss up-up-toss",
+        ballsAlternating: false,
+        check: [
+            { hand: "left", up: true },
+            { hand: "left", up: true },
+            { hand: "left", up: false },
+            { hand: "right", up: true },
+            { hand: "right", up: true },
+            { hand: "right", up: false },
+            { hand: "left", up: true },
+            { hand: "left", up: true },
+            { hand: "left", up: false },
+        ]
+    },
+    {
+        text: "Do it some more",
+        ballsAlternating: false,
+        check: [
+            { hand: "left", up: true },
+            { hand: "left", up: true },
+            { hand: "left", up: false },
+            { hand: "right", up: true },
+            { hand: "right", up: true },
+            { hand: "right", up: false },
+            { hand: "left", up: true },
+            { hand: "left", up: true },
+            { hand: "left", up: false },
+            { hand: "right", up: true },
+            { hand: "right", up: true },
+            { hand: "right", up: false },
+            { hand: "left", up: true },
+            { hand: "left", up: true },
+            { hand: "left", up: false },
+        ]
+    },
+    {
+        text: "Now all balls in your left hand, throw them up once, then throw them to the right",
+        ballsAlternating: false,
+        check: [
+            { hand: "left", up: true },
+            { hand: "left", up: true },
+            { hand: "left", up: true },
+            { hand: "left", up: false },
+            { hand: "left", up: false },
+            { hand: "left", up: false },
+        ]
+    },
+    {
+        text: "And back.... up-up-up toss-toss-toss",
+        ballsAlternating: false,
+        check: [
+            { hand: "right", up: true },
+            { hand: "right", up: true },
+            { hand: "right", up: true },
+            { hand: "right", up: false },
+            { hand: "right", up: false },
+            { hand: "right", up: false },
+        ]
+    },
+    {
+        text: "And the snake forms again. ",
+        ballsAlternating: false,
+        check: [
+            { hand: "left", up: true },
+            { hand: "left", up: true },
+            { hand: "left", up: true },
+            { hand: "left", up: false },
+            { hand: "left", up: false },
+            { hand: "left", up: false },
+            { hand: "right", up: true },
+            { hand: "right", up: true },
+            { hand: "right", up: true },
+            { hand: "right", up: false },
+            { hand: "right", up: false },
+            { hand: "right", up: false },
+            { hand: "left", up: true },
+            { hand: "left", up: true },
+            { hand: "left", up: true },
+            { hand: "left", up: false },
+            { hand: "left", up: false },
+            { hand: "left", up: false },
+            { hand: "right", up: true },
+            { hand: "right", up: true },
+            { hand: "right", up: true },
+            { hand: "right", up: false },
+            { hand: "right", up: false },
+            { hand: "right", up: false },
+        ]
+    },
     {
         text: "Keep playing!",
         check: []
@@ -309,16 +441,6 @@ const browserTutorial = [
 ]
 
 
-const tutorial = browserTutorial;
-
-let tutorialStep = 0;
-
-const throwHistory = [];
-
-
-// Game loop control
-let lastTime = 0;
-let gameStarted = false;
 
 // Update juggler hands
 function updateJugglerHands() {
@@ -402,7 +524,6 @@ function draw() {
 
 
 function releaseBall(hand, high, outer, up, horiz) {
-    console.log('release ball')
     inner = !outer;
     let vx = balls.length % 2 == 0 ? 0 : 1;
     let vy;
@@ -447,6 +568,7 @@ function releaseBall(hand, high, outer, up, horiz) {
             ball.hand == "";
 
             throwHistory.push({ "ball": ball.id, hand, high, inner, up })
+            console.log(throwHistory[throwHistory.length-1])
             break;
         }
     }
@@ -494,13 +616,13 @@ function match(step) {
 
 function translateText(text) {
     if (isMacOS()) {
-        text = text.replace("<CTRL>", "^");
-        text = text.replace("<ALT>", "⌥");
-        text = text.replace("<SHIFT>", "⇧");
+        text = text.replaceAll("<CTRL>", "^");
+        text = text.replaceAll("<ALT>", "⌥");
+        text = text.replaceAll("<SHIFT>", "⇧");
     } else {
-        text = text.replace("<CTRL>", "Ctrl");
-        text = text.replace("<ALT>", "Alt");
-        text = text.replace("<SHIFT>", "Shift");
+        text = text.replaceAll("<CTRL>", "Ctrl");
+        text = text.replaceAll("<ALT>", "Alt");
+        text = text.replaceAll("<SHIFT>", "Shift");
     }
     return text;
 }
