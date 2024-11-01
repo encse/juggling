@@ -42,13 +42,13 @@ function initCanvas() {
 
 
 const cascadeTutorial = [{
-    text: "Press ←",
+    text: "Press ← (4 on the numpad)",
     check: [
         { hand: "left" },
     ]
 },
 {
-    text: "Press →",
+    text: "Press → (or 6)",
     check: [
         { hand: "right" },
     ]
@@ -180,7 +180,7 @@ const tutorial = [
         ]
     },
     {
-        text: "<SHIFT> for higher throws",
+        text: "<SHIFT> for higher throws (7, 9 on the numpad)",
         ballsAlternating: false,
         check: [
             { high: true },
@@ -649,14 +649,25 @@ window.addEventListener("resize", initCanvas);
 window.addEventListener("orientationchange", initCanvas);
 
 document.addEventListener('keydown', function (e) {
+    high = e.shiftKey ^ e.getModifierState("CapsLock");
+    outer = e.altKey;
+    up = e.ctrlKey;
     if (e.key === "ArrowLeft") {
-        releaseBall("left", e.shiftKey || e.getModifierState("CapsLock"), e.altKey, e.ctrlKey, false);
+        releaseBall("left", high, outer, up, false);
     } else if (e.key === "ArrowRight") {
-        releaseBall("right", e.shiftKey || e.getModifierState("CapsLock"), e.altKey, e.ctrlKey, false);
+        releaseBall("right", high, outer, up, false);
     } else if (e.key === "1") {
         releaseBall("left", false, false, false, true);
     } else if (e.key === "3") {
         releaseBall("right", false, false, false, true);
+    } else if (e.key === "4") {
+        releaseBall("left", false, outer, up, false);
+    } else if (e.key === "6") {
+        releaseBall("right", false, outer, up, false);
+    } else if (e.key === "7") {
+        releaseBall("left", true, outer, up, false);
+    } else if (e.key === "9") {
+        releaseBall("right", true, outer, up, false);
     }
 });
 
