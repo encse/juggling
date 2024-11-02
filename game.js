@@ -147,10 +147,10 @@ const tutorial = [
         text: "This looks a bit odd, but we can make it better. Use X and C for quick low-pass throws",
         ballsAlternating: false,
         check: [
-            { hand: "left", height: 0 },
-            { hand: "right", height: 0 },
-            { hand: "left", height: 0 },
-            { hand: "right", height: 0 },
+            { height: 0 },
+            { height: 0 },
+            { height: 0 },
+            { height: 0 },
         ]
     },
 
@@ -195,6 +195,9 @@ const tutorial = [
             { ball: 'x', outer: true },
             { ball: 'y', outer: false },
             { ball: 'z', outer: false },
+            { ball: 'x', outer: true },
+            { ball: 'y', outer: false },
+            { ball: 'z', outer: false },
         ]
     },
     {
@@ -219,7 +222,7 @@ const tutorial = [
     },
 
     {
-        text: "Keep playing with two balls in your left",
+        text: "Play with two balls in your left",
         check: [
             { ball: 'x', hand: 'left', up: true },
             { ball: 'y', hand: 'left', up: true },
@@ -293,7 +296,7 @@ const tutorial = [
     },
 
     {
-        text: "Something more challenging. Start with two balls in your right. Repeat S,C,D,X",
+        text: "Something more challenging. Start with two balls in your right. Repeat S,C,D,X (CapsLock on)",
         check: [
             { ball: 'x', hand: 'left', up: true },
             { ball: 'y', hand: 'right', height: 0 },
@@ -306,7 +309,7 @@ const tutorial = [
         ]
     },
     {
-        text: "That's called rectangular juggling! Go higher with W,C,E,X",
+        text: "That's called rectangular juggling! Go higher with W,C,E,X (CapsLock on)",
         check: [
             { ball: 'x', hand: 'left', height: 2, up: true },
             { ball: 'y', hand: 'right', height: 0 },
@@ -319,7 +322,7 @@ const tutorial = [
         ]
     },
     {
-        text: "Aim for keeping two balls in the air!",
+        text: "Aim to keep two balls in the air!",
         check: [
             { ball: 'x', hand: 'left', height: 2, up: true },
             { ball: 'y', hand: 'right', height: 0 },
@@ -555,8 +558,10 @@ function advanceTutorial(back) {
     if (back) {
         tutorialStep = Math.max(0, tutorialStep - 1);
     } else {
-        tutorialStep = Math.min(tutorialStep + 1, tutorial.length-1);
+        tutorialStep = Math.min(tutorialStep + 1, tutorial.length - 1);
     }
+
+    document.getElementById('progress').style.width = `${tutorialStep / (tutorial.length - 1) * 100}%`;
 
     const message = document.getElementById('popupMessage');
     if (tutorialStep == tutorial.length) {

@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Juggler Game</title>
+    <title>Juggling Game</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Spicy+Rice&display=swap" rel="stylesheet">
@@ -63,28 +63,23 @@
             flex-direction: column;
         }
 
-        #popupMessage {
-            display: none;
+        .bottom {
             background-color: rgba(96, 123, 152, 0.8);
             color: white;
+        }
+        #popupMessage {
             padding: 20px;
             font-size: 1.2em;
             text-align: center;
-            opacity: 1;
-            transition: opacity 1s ease-out;
         }
 
-        #popupMessage.show {
-            display: block;
-            /* Show the message */
-            opacity: 1;
-            /* Start fully opaque */
-        }
 
-        #popupMessage.fade-out {
-            opacity: 0;
-            /* Fade to transparent */
-        }
+         #progress {
+            height: 10px;
+            width: 10%;
+            background: rgba(96, 123, 152, 1);
+            transition: width 0.5s ease; 
+        } 
     </style>
 </head>
 
@@ -95,6 +90,7 @@
     </div>
     <canvas id="gameCanvas"></canvas>
     <div class="bottom">
+        <div id="progress"></div>
         <div id="popupMessage"></div>
     </div>
     <script src="game.js"></script>
