@@ -1,9 +1,7 @@
 const canvas = document.getElementById('gameCanvas');
-
-
 const ctx = canvas.getContext('2d');
-const gravity = 0.2
 
+const gravity = 0.2
 
 const keyMap = {
     KeyQ: { hand: "left", outer: true, height: 2 },
@@ -24,17 +22,9 @@ const keyMap = {
 
 let juggler = {};
 let balls = [];
-
 let tutorialStep = -1;
-const throwHistory = [];
-
-// Game loop control
+let throwHistory = [];
 let lastTime = 0;
-
-function isMacOS() {
-    return navigator.userAgentData?.platform === 'macOS';
-}
-
 
 const tutorial = [
     {
@@ -50,7 +40,7 @@ const tutorial = [
         ]
     },
     {
-        text: "S,D,S,D...",
+        text: "S, D, S, D...",
         check: [
             { hand: "left" },
             { hand: "right" },
@@ -118,7 +108,6 @@ const tutorial = [
             { hand: "right", outer: true },
         ]
     },
-
     {
         text: "You can go higher using Q, W, E and R.",
         ballsAlternating: true,
@@ -129,7 +118,6 @@ const tutorial = [
             { height: 2 },
         ]
     },
-
     {
         text: "Make a basic 'circle' using R and S.",
         ballsAlternating: true,
@@ -155,7 +143,7 @@ const tutorial = [
     },
 
     {
-        text: "Now combine X throws with R throws. That's a 'shower' pattern.",
+        text: "Combine X throws with R throws for a nice circle (also known as the shower).",
         check: [
             { ball: 'x', hand: "left", height: 0 },
             { ball: 'x', hand: "right", height: 2, outer: true },
@@ -167,7 +155,7 @@ const tutorial = [
     },
 
     {
-        text: "So far so good. Switch back to regular cascade now (S, D)",
+        text: "Great! Switch back to regular cascade now (S, D)",
         check: [
             { ball: 'x', hand: "left", height: 1 },
             { ball: 'y', hand: "right", height: 1 },
@@ -179,7 +167,7 @@ const tutorial = [
     },
 
     {
-        text: "Remember the wide throws (A, F)?",
+        text: "Remember the wide throws A and F?",
         check: [
             { ball: 'x', hand: "left", outer: true, height: 1 },
             { ball: 'y', hand: "right", outer: true, height: 1 },
@@ -213,7 +201,7 @@ const tutorial = [
     },
 
     {
-        text: "Let's play in one hand now. Add 'Shift' to make vertical throws",
+        text: "Let's play in one hand now. The 'Shift' key changes your throws vertical",
         check: [
             { up: true },
             { up: true },
@@ -222,7 +210,7 @@ const tutorial = [
     },
 
     {
-        text: "Play with two balls in your left",
+        text: "Play with two balls in your left!",
         check: [
             { ball: 'x', hand: 'left', up: true },
             { ball: 'y', hand: 'left', up: true },
@@ -231,7 +219,7 @@ const tutorial = [
         ]
     },
     {
-        text: "Make an inward circle using Shift+A",
+        text: "Make an inward circle using Shift+A.",
         check: [
             { ball: 'x', hand: 'left', up: true, outer: true },
             { ball: 'y', hand: 'left', up: true, outer: true },
@@ -240,7 +228,7 @@ const tutorial = [
         ]
     },
     {
-        text: "Make columns with Shift+A, Shift+S",
+        text: "Make columns with Shift+A, Shift+S.",
         check: [
             { ball: 'x', hand: 'left', up: true, outer: false },
             { ball: 'y', hand: 'left', up: true, outer: true },
@@ -262,7 +250,7 @@ const tutorial = [
     },
 
     {
-        text: "Quickly alternate in and out throws (Shift+D, Shift+F)",
+        text: "Quickly alternate in and out throws with Shift+D, Shift+F.",
         check: [
             { ball: 'x', hand: 'right', up: true, outer: true },
             { ball: 'y', hand: 'right', up: true, outer: false },
@@ -296,7 +284,7 @@ const tutorial = [
     },
 
     {
-        text: "Something more challenging. Start with two balls in your right. Repeat S,C,D,X (CapsLock on)",
+        text: "Something more challenging. Start with two balls in your right. Repeat S, C, D, X (CapsLock on)",
         check: [
             { ball: 'x', hand: 'left', up: true },
             { ball: 'y', hand: 'right', height: 0 },
@@ -309,7 +297,7 @@ const tutorial = [
         ]
     },
     {
-        text: "That's called rectangular juggling! Go higher with W,C,E,X (CapsLock on)",
+        text: "That's called rectangular juggling! Go higher with W, C, E, X (CapsLock on)",
         check: [
             { ball: 'x', hand: 'left', height: 2, up: true },
             { ball: 'y', hand: 'right', height: 0 },
@@ -335,7 +323,7 @@ const tutorial = [
         ]
     },
     {
-        text: "That's a wrap! Get some balls and learn juggling for real.",
+        text: "That's a wrap! Get some balls and learn juggling for real now.",
         check: [
             { ball: 'x', hand: 'left', height: 2, up: true },
             { ball: 'y', hand: 'right', height: 0 },
@@ -348,8 +336,6 @@ const tutorial = [
         ]
     },
 ]
-
-
 
 function initCanvas() {
     canvas.width = canvas.clientWidth;
@@ -401,7 +387,6 @@ function updateJugglerHands() {
 function closeToHand(ball, hand) {
     const dist1 = Math.sqrt((ball.x - hand.x) ** 2 + (ball.y - hand.y) ** 2);
     const dist2 = Math.sqrt((ball.x + ball.vx - hand.x) ** 2 + (ball.y + ball.vy - hand.y) ** 2);
-    // console.log(ball.id, dist1, dist2);
     return dist2 <= dist1 && dist1 < ball.radius + juggler.handRadius;
 }
 
@@ -493,7 +478,6 @@ function releaseBall(hand, height, outer, up) {
             ball.hand == "";
 
             throwHistory.push({ "ball": ball.id, hand, height, outer, up })
-            console.log(throwHistory[throwHistory.length - 1])
             break;
         }
     }
@@ -555,29 +539,19 @@ function match(step) {
 }
 
 function advanceTutorial(back) {
+    throwHistory.splice(0);
+
     if (back) {
         tutorialStep = Math.max(0, tutorialStep - 1);
     } else {
         tutorialStep = Math.min(tutorialStep + 1, tutorial.length - 1);
     }
 
-    document.getElementById('progress').style.width = `${tutorialStep / (tutorial.length - 1) * 100}%`;
-
+    const progress = document.getElementById('progress');
     const message = document.getElementById('popupMessage');
-    if (tutorialStep == tutorial.length) {
-        setTimeout(() => {
-            message.classList.add('fade-out');
-            setTimeout(() => {
-                message.classList.remove('show', 'fade-out');
-            }, 1000);
-        }, 1000);
-        return;
-    }
 
-    tutorial[tutorialStep].init?.();
-    throwHistory.splice(0)
-    message.innerHTML = tutorial[tutorialStep].text;
-    message.classList.add('show');
+    progress.style.width = `${tutorialStep / (tutorial.length - 1) * 100}%`;
+    message.innerText = tutorial[tutorialStep].text;
 }
 
 
@@ -585,7 +559,6 @@ window.addEventListener("resize", initCanvas);
 window.addEventListener("orientationchange", initCanvas);
 
 document.addEventListener('keydown', function (e) {
-    console.log(e.code)
     if (e.code == "Tab") {
         advanceTutorial(e.shiftKey);
         e.preventDefault();
