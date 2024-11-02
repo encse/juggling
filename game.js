@@ -4,10 +4,28 @@ const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 const gravity = 0.2
 
+
+const keyMap = {
+    KeyQ: { hand: "left", outer: true, height: 2 },
+    KeyW: { hand: "left", outer: false, height: 2 },
+    KeyE: { hand: "right", outer: false, height: 2 },
+    KeyR: { hand: "right", outer: true, height: 2 },
+
+    KeyA: { hand: "left", outer: true, height: 1 },
+    KeyS: { hand: "left", outer: false, height: 1 },
+    KeyD: { hand: "right", outer: false, height: 1 },
+    KeyF: { hand: "right", outer: true, height: 1 },
+
+    KeyZ: { hand: "left", outer: false, height: 0 },
+    KeyX: { hand: "left", outer: false, height: 0 },
+    KeyC: { hand: "right", outer: false, height: 0 },
+    KeyV: { hand: "right", outer: false, height: 0 },
+}
+
 let juggler = {};
 let balls = [];
 
-let tutorialStep = 0;
+let tutorialStep = -1;
 const throwHistory = [];
 
 // Game loop control
@@ -16,6 +34,318 @@ let lastTime = 0;
 function isMacOS() {
     return navigator.userAgentData?.platform === 'macOS';
 }
+
+
+const tutorial = [
+    {
+        text: "Let's learn to juggle! Press S.",
+        check: [
+            { hand: "left" },
+        ]
+    },
+    {
+        text: "Now press D.",
+        check: [
+            { hand: "right" },
+        ]
+    },
+    {
+        text: "S,D,S,D...",
+        check: [
+            { hand: "left" },
+            { hand: "right" },
+            { hand: "left" },
+            { hand: "right" },
+        ]
+    },
+    {
+        text: "Keep one ball in the air, alternate hands!",
+        ballsAlternating: true,
+        check: [
+            { hand: "left" },
+            { hand: "right" },
+            { hand: "left" },
+            { hand: "right" },
+            { hand: "left" },
+            { hand: "right" },
+        ]
+    },
+    {
+        text: "That's called a cascade.",
+        ballsAlternating: true,
+        check: [
+            { hand: "left" },
+            { hand: "right" },
+            { hand: "left" },
+            { hand: "right" },
+            { hand: "left" },
+            { hand: "right" },
+        ]
+    },
+    {
+        text: "Let's make a snake. S, S, S, D, D, D",
+        ballsAlternating: true,
+        check: [
+            { hand: "left" },
+            { hand: "left" },
+            { hand: "left" },
+            { hand: "right" },
+            { hand: "right" },
+            { hand: "right" },
+        ]
+    },
+    {
+        text: "Switch back to cascade.",
+        ballsAlternating: true,
+        check: [
+            { hand: "left" },
+            { hand: "right" },
+            { hand: "left" },
+            { hand: "right" },
+            { hand: "left" },
+            { hand: "right" },
+        ]
+    },
+    {
+        text: "Keep the rtythm. Use A and F for wider throws.",
+        ballsAlternating: true,
+        check: [
+            { hand: "left", outer: true },
+            { hand: "right", outer: true },
+            { hand: "left", outer: true },
+            { hand: "right", outer: true },
+            { hand: "left", outer: true },
+            { hand: "right", outer: true },
+        ]
+    },
+
+    {
+        text: "You can go higher using Q, W, E and R.",
+        ballsAlternating: true,
+        check: [
+            { height: 2 },
+            { height: 2 },
+            { height: 2 },
+            { height: 2 },
+        ]
+    },
+
+    {
+        text: "Make a basic 'circle' using R and S.",
+        ballsAlternating: true,
+        check: [
+            { hand: "left", height: 1 },
+            { hand: "right", height: 2, outer: true },
+            { hand: "left", height: 1 },
+            { hand: "right", height: 2, outer: true },
+            { hand: "left", height: 1 },
+            { hand: "right", height: 2, outer: true },
+        ]
+    },
+
+    {
+        text: "This looks a bit odd, but we can make it better. Use X and C for quick low-pass throws",
+        ballsAlternating: false,
+        check: [
+            { hand: "left", height: 0 },
+            { hand: "right", height: 0 },
+            { hand: "left", height: 0 },
+            { hand: "right", height: 0 },
+        ]
+    },
+
+    {
+        text: "Now combine X throws with R throws. That's a 'shower' pattern.",
+        check: [
+            { ball: 'x', hand: "left", height: 0 },
+            { ball: 'x', hand: "right", height: 2, outer: true },
+            { ball: 'y', hand: "left", height: 0 },
+            { ball: 'y', hand: "right", height: 2, outer: true },
+            { ball: 'z', hand: "left", height: 0 },
+            { ball: 'z', hand: "right", height: 2, outer: true },
+        ]
+    },
+
+    {
+        text: "So far so good. Switch back to regular cascade now (S, D)",
+        check: [
+            { ball: 'x', hand: "left", height: 1 },
+            { ball: 'y', hand: "right", height: 1 },
+            { ball: 'z', hand: "left", height: 1 },
+            { ball: 'x', hand: "right", height: 1 },
+            { ball: 'y', hand: "left", height: 1 },
+            { ball: 'z', hand: "right", height: 1 },
+        ]
+    },
+
+    {
+        text: "Remember the wide throws (A, F)?",
+        check: [
+            { ball: 'x', hand: "left", outer: true, height: 1 },
+            { ball: 'y', hand: "right", outer: true, height: 1 },
+            { ball: 'z', hand: "left", outer: true, height: 1 },
+        ]
+    },
+    {
+        text: "Focus on the blue ball! Try throwing it outside, while keeping the other two inside.",
+        check: [
+            { ball: 'x', outer: true },
+            { ball: 'y', outer: false },
+            { ball: 'z', outer: false },
+            { ball: 'x', outer: true },
+            { ball: 'y', outer: false },
+            { ball: 'z', outer: false },
+        ]
+    },
+    {
+        text: "That's also known as the 'over the top' pattern",
+        check: [
+            { ball: 'x', outer: true },
+            { ball: 'y', outer: false },
+            { ball: 'z', outer: false },
+            { ball: 'x', outer: true },
+            { ball: 'y', outer: false },
+            { ball: 'z', outer: false },
+        ]
+    },
+
+    {
+        text: "Let's play in one hand now. Add 'Shift' to make vertical throws",
+        check: [
+            { up: true },
+            { up: true },
+            { up: true },
+        ]
+    },
+
+    {
+        text: "Keep playing with two balls in your left",
+        check: [
+            { ball: 'x', hand: 'left', up: true },
+            { ball: 'y', hand: 'left', up: true },
+            { ball: 'x', hand: 'left', up: true },
+            { ball: 'y', hand: 'left', up: true },
+        ]
+    },
+    {
+        text: "Make an inward circle using Shift+A",
+        check: [
+            { ball: 'x', hand: 'left', up: true, outer: true },
+            { ball: 'y', hand: 'left', up: true, outer: true },
+            { ball: 'x', hand: 'left', up: true, outer: true },
+            { ball: 'y', hand: 'left', up: true, outer: true },
+        ]
+    },
+    {
+        text: "Make columns with Shift+A, Shift+S",
+        check: [
+            { ball: 'x', hand: 'left', up: true, outer: false },
+            { ball: 'y', hand: 'left', up: true, outer: true },
+            { ball: 'x', hand: 'left', up: true, outer: false },
+            { ball: 'y', hand: 'left', up: true, outer: true },
+        ]
+    },
+
+    {
+        text: "Pass all balls to the right now (S). Form a circle with 3 balls using Shift+D.",
+        check: [
+            { ball: 'x', hand: 'right', up: true },
+            { ball: 'y', hand: 'right', up: true },
+            { ball: 'z', hand: 'right', up: true },
+            { ball: 'x', hand: 'right', up: true },
+            { ball: 'y', hand: 'right', up: true },
+            { ball: 'z', hand: 'right', up: true },
+        ]
+    },
+
+    {
+        text: "Quickly alternate in and out throws (Shift+D, Shift+F)",
+        check: [
+            { ball: 'x', hand: 'right', up: true, outer: true },
+            { ball: 'y', hand: 'right', up: true, outer: false },
+            { ball: 'z', hand: 'right', up: true, outer: true },
+            { ball: 'x', hand: 'right', up: true, outer: false },
+            { ball: 'y', hand: 'right', up: true, outer: true },
+            { ball: 'z', hand: 'right', up: true, outer: false },
+        ]
+    },
+    {
+        text: "A mini cascade in your right!",
+        check: [
+            { ball: 'x', hand: 'right', up: true, outer: true },
+            { ball: 'y', hand: 'right', up: true, outer: false },
+            { ball: 'z', hand: 'right', up: true, outer: true },
+            { ball: 'x', hand: 'right', up: true, outer: false },
+            { ball: 'y', hand: 'right', up: true, outer: true },
+            { ball: 'z', hand: 'right', up: true, outer: false },
+        ]
+    },
+    {
+        text: "CapsLock turns on vertical mode. No need to press Shift anymore.",
+        check: [
+            { ball: 'x', hand: 'right', up: true, outer: true },
+            { ball: 'y', hand: 'right', up: true, outer: false },
+            { ball: 'z', hand: 'right', up: true, outer: true },
+            { ball: 'x', hand: 'right', up: true, outer: false },
+            { ball: 'y', hand: 'right', up: true, outer: true },
+            { ball: 'z', hand: 'right', up: true, outer: false },
+        ]
+    },
+
+    {
+        text: "Something more challenging. Start with two balls in your right. Repeat S,C,D,X",
+        check: [
+            { ball: 'x', hand: 'left', up: true },
+            { ball: 'y', hand: 'right', height: 0 },
+            { ball: 'z', hand: 'right', up: true },
+            { ball: 'y', hand: 'left', height: 0 },
+            { ball: 'x', hand: 'left', up: true },
+            { ball: 'y', hand: 'right', height: 0 },
+            { ball: 'z', hand: 'right', up: true },
+            { ball: 'y', hand: 'left', height: 0 },
+        ]
+    },
+    {
+        text: "That's called rectangular juggling! Go higher with W,C,E,X",
+        check: [
+            { ball: 'x', hand: 'left', height: 2, up: true },
+            { ball: 'y', hand: 'right', height: 0 },
+            { ball: 'z', hand: 'right', height: 2, up: true },
+            { ball: 'y', hand: 'left', height: 0 },
+            { ball: 'x', hand: 'left', height: 2, up: true },
+            { ball: 'y', hand: 'right', height: 0 },
+            { ball: 'z', hand: 'right', height: 2, up: true },
+            { ball: 'y', hand: 'left', height: 0 },
+        ]
+    },
+    {
+        text: "Aim for keeping two balls in the air!",
+        check: [
+            { ball: 'x', hand: 'left', height: 2, up: true },
+            { ball: 'y', hand: 'right', height: 0 },
+            { ball: 'z', hand: 'right', height: 2, up: true },
+            { ball: 'y', hand: 'left', height: 0 },
+            { ball: 'x', hand: 'left', height: 2, up: true },
+            { ball: 'y', hand: 'right', height: 0 },
+            { ball: 'z', hand: 'right', height: 2, up: true },
+            { ball: 'y', hand: 'left', height: 0 },
+        ]
+    },
+    {
+        text: "That's a wrap! Get some balls and learn juggling for real.",
+        check: [
+            { ball: 'x', hand: 'left', height: 2, up: true },
+            { ball: 'y', hand: 'right', height: 0 },
+            { ball: 'z', hand: 'right', height: 2, up: true },
+            { ball: 'y', hand: 'left', height: 0 },
+            { ball: 'x', hand: 'left', height: 2, up: true },
+            { ball: 'y', hand: 'right', height: 0 },
+            { ball: 'z', hand: 'right', height: 2, up: true },
+            { ball: 'y', hand: 'left', height: 0 },
+        ]
+    },
+]
+
 
 
 function initCanvas() {
@@ -40,405 +370,6 @@ function initCanvas() {
 
 }
 
-
-const cascadeTutorial = [{
-    text: "Press ← (4 on the numpad)",
-    check: [
-        { hand: "left" },
-    ]
-},
-{
-    text: "Press → (or 6)",
-    check: [
-        { hand: "right" },
-    ]
-},
-{
-    text: "← →  ← →",
-    check: [
-        { hand: "left" },
-        { hand: "right" },
-        { hand: "left" },
-        { hand: "right" },
-    ]
-},
-{
-    text: "Keep one ball in the air, alternate hands!",
-    ballsAlternating: true,
-    check: [
-        { hand: "left" },
-        { hand: "right" },
-        { hand: "left" },
-        { hand: "right" },
-        { hand: "left" },
-        { hand: "right" },
-        { hand: "left" },
-        { hand: "right" },
-        { hand: "left" },
-        { hand: "right" },
-        { hand: "left" },
-        { hand: "right" },
-    ]
-},
-{
-    text: "That's called a cascade",
-    ballsAlternating: true,
-    check: [
-        { hand: "left" },
-        { hand: "right" },
-        { hand: "left" },
-        { hand: "right" },
-        { hand: "left" },
-        { hand: "right" },
-        { hand: "left" },
-        { hand: "right" },
-        { hand: "left" },
-        { hand: "right" },
-        { hand: "left" },
-        { hand: "right" },
-        { hand: "left" },
-        { hand: "right" },
-        { hand: "left" },
-        { hand: "right" },
-        { hand: "left" },
-        { hand: "right" },
-        { hand: "left" },
-        { hand: "right" },
-    ]
-},
-{
-    text: "Now make a snake: ← ← ←, → → →",
-    ballsAlternating: true,
-    check: [
-        { hand: "left" },
-        { hand: "left" },
-        { hand: "left" },
-        { hand: "right" },
-        { hand: "right" },
-        { hand: "right" },
-    ]
-},
-{
-    text: "Switch back to cascade: left-right-left-right",
-    ballsAlternating: true,
-    check: [
-        { hand: "left" },
-        { hand: "right" },
-        { hand: "left" },
-        { hand: "right" },
-        { hand: "left" },
-        { hand: "right" },
-    ]
-}];
-
-
-const tutorial = [
-    ...cascadeTutorial,
-    {
-        text: "Keep the rtythm. Now use <ALT> for outer throws",
-        ballsAlternating: true,
-        check: [
-            { hand: "left", inner: false },
-            { hand: "right", inner: false },
-            { hand: "left", inner: false },
-            { hand: "right", inner: false },
-            { hand: "left", inner: false },
-            { hand: "right", inner: false },
-        ]
-    },
-    {
-        text: "Try this pattern: outer, inner, inner",
-        ballsAlternating: true,
-        check: [
-            { inner: false, high: false },
-            { inner: true, high: false },
-            { inner: true, high: false },
-            { inner: false, high: false },
-            { inner: true, high: false },
-            { inner: true, high: false },
-        ]
-    },
-    {
-        text: "You are getting it, keep pushing",
-        ballsAlternating: true,
-        check: [
-            { inner: false, high: false },
-            { inner: true, high: false },
-            { inner: true, high: false },
-            { inner: false, high: false },
-            { inner: true, high: false },
-            { inner: true, high: false },
-            { inner: false, high: false },
-            { inner: true, high: false },
-            { inner: true, high: false },
-            { inner: false, high: false },
-            { inner: true, high: false },
-            { inner: true, high: false },
-            { inner: false, high: false },
-            { inner: true, high: false },
-            { inner: true, high: false },
-        ]
-    },
-    {
-        text: "<SHIFT> for higher throws (7, 9 on the numpad)",
-        ballsAlternating: false,
-        check: [
-            { high: true },
-            { high: true },
-            { high: true },
-            { high: true },
-            { high: true },
-            { high: true },
-        ]
-    },
-    {
-        text: "Try forming a circle throwing high balls with your right hand",
-        ballsAlternating: true,
-        check: [
-            { hand: "left", high: false },
-            { hand: "right", high: true },
-            { hand: "left", high: false },
-            { hand: "right", high: true },
-        ]
-    },
-    {
-        text: "Continue",
-        ballsAlternating: true,
-        check: [
-            { hand: "left", high: false },
-            { hand: "right", high: true },
-            { hand: "left", high: false },
-            { hand: "right", high: true },
-            { hand: "left", high: false },
-            { hand: "right", high: true },
-            { hand: "left", high: false },
-            { hand: "right", high: true },
-            { hand: "left", high: false },
-            { hand: "right", high: true },
-        ]
-    },
-    {
-        text: "Press <CTRL> for vertical throws",
-        ballsAlternating: false,
-        check: [
-            { up: true },
-            { up: true },
-            { up: true },
-            { up: true },
-        ]
-    },
-    {
-        text: "Each ball in your left, throw them up vertically",
-        ballsAlternating: true,
-        check: [
-            { hand: "left", up: true },
-            { hand: "left", up: true },
-            { hand: "left", up: true },
-        ]
-    },
-    {
-        text: "To make an outer vertical, press <CTRL> <ALT>",
-        ballsAlternating: true,
-        check: [
-            { inner: false, up: true },
-            { inner: false, up: true },
-            { inner: false, up: true },
-            { inner: false, up: true },
-            { inner: false, up: true },
-            { inner: false, up: true },
-        ]
-    },
-    {
-        text: "Form columns in your left hand. 3 vertical throws inside, 3 vertical outside",
-        ballsAlternating: true,
-        check: [
-            { hand: "left", inner: true, up: true },
-            { hand: "left", inner: true, up: true },
-            { hand: "left", inner: true, up: true },
-            { hand: "left", inner: false, up: true },
-            { hand: "left", inner: false, up: true },
-            { hand: "left", inner: false, up: true },
-            { hand: "left", inner: true, up: true },
-            { hand: "left", inner: true, up: true },
-            { hand: "left", inner: true, up: true },
-        ]
-    },
-
-    {
-        text: "Switch hands now. Throw the balls up in your right.",
-        ballsAlternating: true,
-        check: [
-            { hand: "right", up: true },
-            { hand: "right", up: true },
-            { hand: "right", up: true },
-        ]
-    },
-
-    {
-        text: "Still in your right hand start throwing up one ball inside (<CTRL>), then one ball outside (<CTRL> <ALT>)",
-        ballsAlternating: true,
-        check: [
-            { hand: "right", up: true, inner: true},
-            { hand: "right", up: true, inner: false},
-            { hand: "right", up: true, inner: true},
-            { hand: "right", up: true, inner: false},
-        ]
-    },
-    {
-        text: "This is a mini-cascade in your right hand now! Keep going",
-        ballsAlternating: true,
-        check: [
-            { hand: "right", up: true, inner: true},
-            { hand: "right", up: true, inner: false},
-            { hand: "right", up: true, inner: true},
-            { hand: "right", up: true, inner: false},
-            { hand: "right", up: true, inner: true},
-            { hand: "right", up: true, inner: false},
-            { hand: "right", up: true, inner: true},
-            { hand: "right", up: true, inner: false},
-            { hand: "right", up: true, inner: true},
-            { hand: "right", up: true, inner: false},
-            { hand: "right", up: true, inner: true},
-            { hand: "right", up: true, inner: false},
-        ]
-    },
-    {
-        text: "Switch back to cascade now: left-right-left-right",
-        ballsAlternating: true,
-        check: [
-            { hand: "left" },
-            { hand: "right" },
-            { hand: "left" },
-            { hand: "right" },
-            { hand: "left" },
-            { hand: "right" },
-        ]
-    },
-    {
-        text: "Now try this. Only one ball changes hands, the other two moves vertically (<CTRL>)",
-        ballsAlternating: false,
-        check: [
-            { hand: "left", up: true },
-            { hand: "left", up: false },
-            { hand: "right", up: true },
-            { hand: "right", up: false },
-        ]
-    },
-    {
-        text: "Good, continue",
-        ballsAlternating: false,
-        check: [
-            { hand: "left", up: true },
-            { hand: "left", up: false },
-            { hand: "right", up: true },
-            { hand: "right", up: false },
-            { hand: "left", up: true },
-            { hand: "left", up: false },
-            { hand: "right", up: true },
-            { hand: "right", up: false },
-            { hand: "left", up: true },
-            { hand: "left", up: false },
-            { hand: "right", up: true },
-            { hand: "right", up: false },
-        ]
-    },
-
-    {
-        text: "Try up-up-toss up-up-toss",
-        ballsAlternating: false,
-        check: [
-            { hand: "left", up: true },
-            { hand: "left", up: true },
-            { hand: "left", up: false },
-            { hand: "right", up: true },
-            { hand: "right", up: true },
-            { hand: "right", up: false },
-            { hand: "left", up: true },
-            { hand: "left", up: true },
-            { hand: "left", up: false },
-        ]
-    },
-    {
-        text: "Do it some more",
-        ballsAlternating: false,
-        check: [
-            { hand: "left", up: true },
-            { hand: "left", up: true },
-            { hand: "left", up: false },
-            { hand: "right", up: true },
-            { hand: "right", up: true },
-            { hand: "right", up: false },
-            { hand: "left", up: true },
-            { hand: "left", up: true },
-            { hand: "left", up: false },
-            { hand: "right", up: true },
-            { hand: "right", up: true },
-            { hand: "right", up: false },
-            { hand: "left", up: true },
-            { hand: "left", up: true },
-            { hand: "left", up: false },
-        ]
-    },
-    {
-        text: "Now all balls in your left hand, throw them up once, then throw them to the right",
-        ballsAlternating: false,
-        check: [
-            { hand: "left", up: true },
-            { hand: "left", up: true },
-            { hand: "left", up: true },
-            { hand: "left", up: false },
-            { hand: "left", up: false },
-            { hand: "left", up: false },
-        ]
-    },
-    {
-        text: "And back.... up-up-up toss-toss-toss",
-        ballsAlternating: false,
-        check: [
-            { hand: "right", up: true },
-            { hand: "right", up: true },
-            { hand: "right", up: true },
-            { hand: "right", up: false },
-            { hand: "right", up: false },
-            { hand: "right", up: false },
-        ]
-    },
-    {
-        text: "And the snake forms again. ",
-        ballsAlternating: false,
-        check: [
-            { hand: "left", up: true },
-            { hand: "left", up: true },
-            { hand: "left", up: true },
-            { hand: "left", up: false },
-            { hand: "left", up: false },
-            { hand: "left", up: false },
-            { hand: "right", up: true },
-            { hand: "right", up: true },
-            { hand: "right", up: true },
-            { hand: "right", up: false },
-            { hand: "right", up: false },
-            { hand: "right", up: false },
-            { hand: "left", up: true },
-            { hand: "left", up: true },
-            { hand: "left", up: true },
-            { hand: "left", up: false },
-            { hand: "left", up: false },
-            { hand: "left", up: false },
-            { hand: "right", up: true },
-            { hand: "right", up: true },
-            { hand: "right", up: true },
-            { hand: "right", up: false },
-            { hand: "right", up: false },
-            { hand: "right", up: false },
-        ]
-    },
-    {
-        text: "Keep playing!",
-        check: []
-    },
-
-]
 
 
 
@@ -467,6 +398,7 @@ function updateJugglerHands() {
 function closeToHand(ball, hand) {
     const dist1 = Math.sqrt((ball.x - hand.x) ** 2 + (ball.y - hand.y) ** 2);
     const dist2 = Math.sqrt((ball.x + ball.vx - hand.x) ** 2 + (ball.y + ball.vy - hand.y) ** 2);
+    // console.log(ball.id, dist1, dist2);
     return dist2 <= dist1 && dist1 < ball.radius + juggler.handRadius;
 }
 
@@ -523,29 +455,19 @@ function draw() {
 }
 
 
-function releaseBall(hand, high, outer, up, horiz) {
-    inner = !outer;
+function releaseBall(hand, height, outer, up) {
     let vx = balls.length % 2 == 0 ? 0 : 1;
     let vy;
-    let dx = inner ? +15 : -15;
+    let dx = outer ? -15 : 15;
 
-    if (horiz) {
-        vy = -2;
-    } else {
-        vy = -8;
+    vy = [2, 7, 9][height];
 
-        if (up) {
-            vy *= 1.1;
-        }
+    if (height == 0) {
+        up = false;
+    }
 
-        if (high) {
-            vy *= 1.2;
-        }
-
-        if (inner) {
-            vy *= 0.9;
-        }
-
+    if (outer && !up) {
+        vy *= 1.1;
     }
 
     const otherHand = hand == "left" ? "right" : "left"
@@ -553,7 +475,7 @@ function releaseBall(hand, high, outer, up, horiz) {
     for (let ball of balls) {
         if (ball.caught && ball.hand === hand) {
             ball.vx = hand == "left" ? vx : -vx;
-            ball.vy = vy;
+            ball.vy = -vy;
             ball.x = juggler.hands[hand].x + (hand == "left" ? dx : -dx);
 
             if (up) {
@@ -561,30 +483,45 @@ function releaseBall(hand, high, outer, up, horiz) {
             } else {
                 dx = juggler.hands[otherHand].x - ball.x
             }
-            const t = Math.abs(vy) * 2 / gravity;
+            const t = vy * 2 / gravity;
             ball.vx = dx / t;
 
             ball.caught = false;
             ball.hand == "";
 
-            throwHistory.push({ "ball": ball.id, hand, high, inner, up })
-            console.log(throwHistory[throwHistory.length-1])
+            throwHistory.push({ "ball": ball.id, hand, height, outer, up })
+            console.log(throwHistory[throwHistory.length - 1])
             break;
         }
     }
 
     if (tutorialStep < tutorial.length && match(tutorial[tutorialStep])) {
-        tutorialStep++;
-        showPopup();
+        advanceTutorial();
     }
 }
 
 function match(step) {
-    const pattern = step.check
+    const pattern = JSON.parse(JSON.stringify(step.check));
 
     const actual = throwHistory.slice(- pattern.length);
     if (actual.length < pattern.length) {
         return false
+    }
+
+    console.log(actual);
+    const ballMap = new Map();
+    for (let i = 0; i < pattern.length; i++) {
+        let patternBall = pattern[i].ball;
+        let actualBall = actual[i].ball;
+        if (patternBall) {
+            if (!ballMap.get(patternBall)) {
+                if ([...ballMap.values(ballMap)].includes(actualBall)) {
+                    return false;
+                }
+                ballMap.set(patternBall, actualBall)
+            }
+            pattern[i].ball = ballMap.get(patternBall);
+        }
     }
 
     for (let i = 0; i < pattern.length; i++) {
@@ -614,20 +551,13 @@ function match(step) {
     return true;
 }
 
-function translateText(text) {
-    if (isMacOS()) {
-        text = text.replaceAll("<CTRL>", "^");
-        text = text.replaceAll("<ALT>", "⌥");
-        text = text.replaceAll("<SHIFT>", "⇧");
+function advanceTutorial(back) {
+    if (back) {
+        tutorialStep = Math.max(0, tutorialStep - 1);
     } else {
-        text = text.replaceAll("<CTRL>", "Ctrl");
-        text = text.replaceAll("<ALT>", "Alt");
-        text = text.replaceAll("<SHIFT>", "Shift");
+        tutorialStep = Math.min(tutorialStep + 1, tutorial.length-1);
     }
-    return text;
-}
 
-function showPopup() {
     const message = document.getElementById('popupMessage');
     if (tutorialStep == tutorial.length) {
         setTimeout(() => {
@@ -640,7 +570,8 @@ function showPopup() {
     }
 
     tutorial[tutorialStep].init?.();
-    message.textContent = translateText(tutorial[tutorialStep].text);
+    throwHistory.splice(0)
+    message.innerHTML = tutorial[tutorialStep].text;
     message.classList.add('show');
 }
 
@@ -649,25 +580,18 @@ window.addEventListener("resize", initCanvas);
 window.addEventListener("orientationchange", initCanvas);
 
 document.addEventListener('keydown', function (e) {
-    high = e.shiftKey ^ e.getModifierState("CapsLock");
-    outer = e.altKey;
-    up = e.ctrlKey;
-    if (e.key === "ArrowLeft") {
-        releaseBall("left", high, outer, up, false);
-    } else if (e.key === "ArrowRight") {
-        releaseBall("right", high, outer, up, false);
-    } else if (e.key === "1") {
-        releaseBall("left", false, false, false, true);
-    } else if (e.key === "3") {
-        releaseBall("right", false, false, false, true);
-    } else if (e.key === "4") {
-        releaseBall("left", false, outer, up, false);
-    } else if (e.key === "6") {
-        releaseBall("right", false, outer, up, false);
-    } else if (e.key === "7") {
-        releaseBall("left", true, outer, up, false);
-    } else if (e.key === "9") {
-        releaseBall("right", true, outer, up, false);
+    console.log(e.code)
+    if (e.code == "Tab") {
+        advanceTutorial(e.shiftKey);
+        e.preventDefault();
+        return true;
+    }
+
+    up = e.shiftKey ^ e.getModifierState("CapsLock");
+    combo = keyMap[e.code]
+    if (combo) {
+        releaseBall(combo.hand, combo.height, combo.outer, up);
+        return true;
     }
 });
 
@@ -685,5 +609,5 @@ function gameLoop(timestamp) {
 }
 
 initCanvas();
-showPopup();
+advanceTutorial();
 requestAnimationFrame(gameLoop);
