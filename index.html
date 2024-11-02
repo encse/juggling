@@ -23,7 +23,7 @@
 
         .top {
             position: absolute;
-            width:100%;
+            width: 100%;
             z-index: -1;
             text-align: center;
             color: white;
@@ -38,7 +38,7 @@
         .bottom {
             position: absolute;
             bottom: 0;
-            width:100%;
+            width: 100%;
         }
 
         h1 {
@@ -50,12 +50,16 @@
         }
 
         canvas {
-            pointer-events:none;
+            pointer-events: none;
             position: fixed;
-            top: 0; /* Align with the top */
-            left: 0; /* Align with the left */
-            width: 100vw; /* Full viewport width */
-            height: 100vh; /* Full viewport height */
+            top: 0;
+            /* Align with the top */
+            left: 0;
+            /* Align with the left */
+            width: 100vw;
+            /* Full viewport width */
+            height: 100vh;
+            /* Full viewport height */
         }
 
         .flow {
@@ -67,6 +71,7 @@
             background-color: rgba(96, 123, 152, 0.8);
             color: white;
         }
+
         #popupMessage {
             padding: 20px;
             font-size: 1.2em;
@@ -74,12 +79,33 @@
         }
 
 
-         #progress {
+        #progress {
             height: 10px;
             width: 10%;
             background: rgba(96, 123, 152, 1);
-            transition: width 0.5s ease; 
-        } 
+            transition: width 0.5s ease;
+        }
+
+        .floating-label {
+            position: absolute;
+            font-size: 1.2em;
+            color: rgb(95, 74, 199);
+            opacity: 1;
+            transition: opacity 2s ease;
+            animation: flyUp 2s ease forwards;
+        }
+
+        @keyframes flyUp {
+            0% {
+                transform: translateY(0);
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateY(-200px);
+                opacity: 0;
+            }
+        }
     </style>
 </head>
 

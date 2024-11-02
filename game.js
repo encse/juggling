@@ -25,6 +25,7 @@ let balls = [];
 let tutorialStep = -1;
 let throwHistory = [];
 let lastTime = 0;
+let streak = 0;
 
 const tutorial = [
     {
@@ -274,12 +275,9 @@ const tutorial = [
     {
         text: "CapsLock turns on vertical mode. No need to press Shift anymore.",
         check: [
-            { ball: 'x', hand: 'right', up: true, outer: true },
-            { ball: 'y', hand: 'right', up: true, outer: false },
-            { ball: 'z', hand: 'right', up: true, outer: true },
-            { ball: 'x', hand: 'right', up: true, outer: false },
-            { ball: 'y', hand: 'right', up: true, outer: true },
-            { ball: 'z', hand: 'right', up: true, outer: false },
+            { up: true },
+            { up: true },
+            { up: true },
         ]
     },
 
@@ -411,8 +409,14 @@ function updateBalls() {
                 if (closeToHand(ball, juggler.hands[hand])) {
                     ball.caught = true;
                     ball.hand = hand;
+
                     ball.vx = 0;
                     ball.vy = 0;
+
+                    const reset = balls.filter(ball => ball.caught && ball.hand === hand).length > 1;
+                    if (reset) {
+                        streak = 0;
+                    }
                 }
             }
 
@@ -476,8 +480,13 @@ function releaseBall(hand, height, outer, up) {
 
             ball.caught = false;
             ball.hand == "";
+            streak += 1;
+        
 
-            throwHistory.push({ "ball": ball.id, hand, height, outer, up })
+            if (streak % 5 == 0){
+                createFloatingLabel(streak, (juggler.hands.left.x +juggler.hands.right.x)/2 , juggler.hands.left.y - 100);
+            }
+            throwHistory.push({ "ball": ball.id, hand, height, outer, up });
             break;
         }
     }
@@ -495,7 +504,6 @@ function match(step) {
         return false
     }
 
-    console.log(actual);
     const ballMap = new Map();
     for (let i = 0; i < pattern.length; i++) {
         let patternBall = pattern[i].ball;
@@ -585,6 +593,23 @@ function gameLoop(timestamp) {
 
     requestAnimationFrame(gameLoop);
 }
+
+function createFloatingLabel(number, x, y) {
+    const label = document.createElement('div');
+    label.className = 'floating-label';
+    label.textContent = number;
+    document.body.appendChild(label);
+
+    label.style.left = `${x}px`;
+    label.style.top = `${y}px`;
+    label.style.transform = 'translate(-50%, -50%)';
+
+    // Remove the label from the DOM after the animation completes
+    label.addEventListener('animationend', () => {
+        label.remove();
+    });
+}
+
 
 initCanvas();
 advanceTutorial();
