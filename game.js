@@ -1,7 +1,7 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
-const gravity = 0.2
+const gravity = 0.2;
 
 const keyMap = {
     KeyQ: { hand: "left", outer: true, height: 2 },
@@ -358,8 +358,6 @@ function initCanvas() {
 }
 
 
-
-
 // Update juggler hands
 function updateJugglerHands() {
     juggler.hands.left.x = juggler.x - juggler.handOffsetX;
@@ -390,38 +388,39 @@ function closeToHand(ball, hand) {
 
 
 // Update balls
-function updateBalls() {
-    balls.forEach(ball => {
-        if (!ball.caught) {
-            // Apply gravity
-            ball.vy += gravity;
-            ball.x += ball.vx;
-            ball.y += ball.vy;
+function updateBalls(deltaMs) {
+    for(; deltaMs > 0; deltaMs -=16){
+        dt = deltaMs >= 16 ? 16 : deltaMs;
+        for (let ball of balls) {
+            if (!ball.caught) {
+                ball.vy += gravity * dt/16;
+                ball.x += ball.vx * dt/16;
+                ball.y += ball.vy * dt/16;
 
-            // Ball off-screen - Game over logic could be added here
-            if (ball.y > canvas.clientHeight) {
-                ball.y = canvas.clientHeight - 50;
-                ball.vy = -ball.vy * 0.7;
-            }
+                // Ball off-screen - Game over logic could be added here
+                if (ball.y > canvas.clientHeight) {
+                    ball.y = canvas.clientHeight - 50;
+                    ball.vy = -ball.vy * 0.7;
+                }
 
-            // Check if the ball is caught
-            for (let hand of ['left', 'right']) {
-                if (closeToHand(ball, juggler.hands[hand])) {
-                    ball.caught = true;
-                    ball.hand = hand;
+                // Check if the ball is caught
+                for (let hand of ['left', 'right']) {
+                    if (closeToHand(ball, juggler.hands[hand])) {
+                        ball.caught = true;
+                        ball.hand = hand;
 
-                    ball.vx = 0;
-                    ball.vy = 0;
+                        ball.vx = 0;
+                        ball.vy = 0;
 
-                    const reset = balls.filter(ball => ball.caught && ball.hand === hand).length > 1;
-                    if (reset) {
-                        streak = 0;
+                        const reset = balls.filter(ball => ball.caught && ball.hand === hand).length > 1;
+                        if (reset) {
+                            streak = 0;
+                        }
                     }
                 }
             }
-
         }
-    });
+    }
 }
 
 // Render the juggler and balls
@@ -464,7 +463,7 @@ function releaseBall(hand, height, outer, up) {
 
     const otherHand = hand == "left" ? "right" : "left"
 
-    for (let ball of balls) {
+    for (let ball of balls.reverse()) {
         if (ball.caught && ball.hand === hand) {
             ball.vx = hand == "left" ? vx : -vx;
             ball.vy = -vy;
@@ -481,10 +480,10 @@ function releaseBall(hand, height, outer, up) {
             ball.caught = false;
             ball.hand == "";
             streak += 1;
-        
 
-            if (streak % 5 == 0){
-                createFloatingLabel(streak, (juggler.hands.left.x +juggler.hands.right.x)/2 , juggler.hands.left.y - 100);
+
+            if (streak % 5 == 0) {
+                createFloatingLabel(streak, (juggler.hands.left.x + juggler.hands.right.x) / 2, juggler.hands.left.y - 100);
             }
             throwHistory.push({ "ball": ball.id, hand, height, outer, up });
             break;
