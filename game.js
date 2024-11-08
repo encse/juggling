@@ -346,12 +346,12 @@ function initCanvas() {
         y: canvas.clientHeight - 250,
         width: 150,
         height: 200,
-        handOffsetX: 80,
+        handOffsetX: 90,
         handOffsetY: 130,
         handRadius: 30,
         hands: {
-            left: { x: 0, y: 0, active: false },
-            right: { x: 0, y: 0, active: false }
+            left: { x: 0, y: 0, dx: 0, dy: 0, active: false, phase: 0, amplitude: 10},
+            right: { x: 0, y: 0, dx: 0, dy: 0, active: false, phase: 90, amplitude: 10 }
         },
         face: {
             x: -180,
@@ -394,27 +394,6 @@ function initCanvas() {
 }
 
 
-// Update juggler hands
-function updateJugglerHands() {
-    juggler.hands.left.x = juggler.x - juggler.handOffsetX;
-    juggler.hands.left.y = juggler.y + juggler.handOffsetY;
-    juggler.hands.right.x = juggler.x + juggler.handOffsetX;
-    juggler.hands.right.y = juggler.y + juggler.handOffsetY;
-
-    // Position balls in the hands initially
-    balls.forEach(ball => {
-        if (ball.caught) {
-            if (ball.hand === 'left') {
-                ball.x = juggler.hands.left.x;
-                ball.y = juggler.hands.left.y;
-            } else if (ball.hand === 'right') {
-                ball.x = juggler.hands.right.x;
-                ball.y = juggler.hands.right.y;
-            }
-        }
-    });
-}
-
 // Check ball collision with hand
 function closeToHand(ball, hand) {
     const dist1 = Math.sqrt((ball.x - hand.x) ** 2 + (ball.y - hand.y) ** 2);
@@ -424,11 +403,37 @@ function closeToHand(ball, hand) {
 
 
 // Update balls
-function updateBalls(deltaMs) {
+function advanceTime(deltaMs) {
+
+    juggler.hands.left.x = juggler.x - juggler.handOffsetX;
+    juggler.hands.left.y = juggler.y + juggler.handOffsetY;
+
+    juggler.hands.right.x = juggler.x + juggler.handOffsetX;
+    juggler.hands.right.y = juggler.y + juggler.handOffsetY;
+
     for(; deltaMs > 0; deltaMs -=16){
         dt = deltaMs >= 16 ? 16 : deltaMs;
+
+        for(let khand of ['left','right']) {
+            let hand = juggler.hands[khand];
+
+            hand.amplitude = Math.max(0, hand.amplitude * 0.8);
+            hand.phase++;
+            let sign = khand == 'left' ? 1 : -1;
+            hand.dx = sign * hand.amplitude *Math.cos(4*hand.phase/180*Math.PI ); 
+            hand.dy = -3* hand.amplitude *Math.sin(4*hand.phase/180*Math.PI );
+        }
+
         for (let ball of balls) {
-            if (!ball.caught) {
+            if (ball.caught) {
+                if (ball.hand === 'left') {
+                    ball.x = juggler.hands.left.x + juggler.hands.left.dx;
+                    ball.y = juggler.hands.left.y + juggler.hands.left.dy;
+                } else if (ball.hand === 'right') {
+                    ball.x = juggler.hands.right.x + juggler.hands.right.dx;
+                    ball.y = juggler.hands.right.y + juggler.hands.right.dy;
+                }
+            } else {
                 ball.vy += gravity * dt/16;
                 ball.x += ball.vx * dt/16;
                 ball.y += ball.vy * dt/16;
@@ -478,16 +483,12 @@ function draw() {
     });
 
     const handSize = 60;
-    if (juggler.hands.left.img) {
-        ctx.drawImage(juggler.hands.left.img, 
-            juggler.hands.left.x - handSize/2, juggler.hands.left.y-handSize/3, handSize,handSize*.75);
+    for(let hand of [juggler.hands.left, juggler.hands.right]) {
+        if (hand.img) {
+          
+            ctx.drawImage(hand.img, hand.x+hand.dx- handSize/2, hand.y+hand.dy-handSize/3, handSize,handSize*.75);
+        }
     }
-
-    if (juggler.hands.right.img) {
-        ctx.drawImage(juggler.hands.right.img, 
-            juggler.hands.right.x - handSize/2, juggler.hands.right.y-handSize/3, handSize,handSize*.75);
-    }
-
 
 }
 
@@ -518,6 +519,8 @@ function releaseBall(hand, height, outer, up) {
             ball.vy = -vy;
             ball.x = juggler.hands[hand].x + (hand == "left" ? dx : -dx);
 
+            juggler.hands[hand].phase = 0;
+            juggler.hands[hand].amplitude =10;
             if (up) {
                 dx = juggler.hands[hand].x - ball.x
             } else {
@@ -634,8 +637,7 @@ function gameLoop(timestamp) {
     const deltaTime = timestamp - lastTime;
     lastTime = timestamp;
 
-    updateJugglerHands();
-    updateBalls(deltaTime);
+    advanceTime(deltaTime);
     draw();
 
     requestAnimationFrame(gameLoop);
