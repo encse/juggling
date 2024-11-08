@@ -37,7 +37,7 @@
             color: inherit;
         }
 
-        .bottom {
+        .bottom-wrap {
             position: absolute;
             bottom: 0;
             width: 100%;
@@ -94,6 +94,12 @@
             text-align: center;
         }
 
+        #legal {
+            font-size: small;
+            color: white;
+            padding: 8px;
+            text-align: right;
+        }
 
         #progress {
             height: 10px;
@@ -130,9 +136,14 @@
         <h2>by <a href="https://twitter.com/encse">@encse</a></h2>
     </div>
     <canvas id="gameCanvas"></canvas>
-    <div class="bottom">
-        <div id="progress"></div>
-        <div id="popupMessage"></div>
+    <div class="bottom-wrap">
+        <div id="legal">
+            <a href="https://github.com/encse/juggling/"> © 2024</a>
+        </div> 
+        <div class="bottom">
+            <div id="progress"></div>
+            <div id="popupMessage"></div>  
+        </div>     
     </div>
     <script src="game.js"></script>
 

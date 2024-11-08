@@ -43,7 +43,7 @@ The tutorial introduces basic and advanced juggling techniques. You’ll follow 
 
 Feel free to fork this repository, make improvements, and submit a pull request. Contributions to improve the tutorial, physics, or add new patterns are welcome!
 
-### Graphics:
+## Image credits
 <a href="https://www.vecteezy.com/free-vector/circus">Circus Vectors by Vecteezy</a>
 <a href="https://www.vecteezy.com/free-vector/face">Face Vectors by Vecteezy</a>
 <a href="https://www.vecteezy.com/free-vector/hand">Hand Vectors by Vecteezy</a>
