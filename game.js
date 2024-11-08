@@ -324,7 +324,7 @@ const tutorial = [
         ]
     },
     {
-        text: "That's a wrap! Get some balls and learn juggling for real now.",
+        text: "It's a wrap! Get some balls and learn juggling for real now.",
         check: [
             { ball: 'x', hand: 'left', height: 2, up: true },
             { ball: 'y', hand: 'right', height: 0 },
