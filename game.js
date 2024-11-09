@@ -358,11 +358,6 @@ function initCanvas() {
     canvas.height = canvas.clientHeight;
 
     ctx = canvas.getContext('2d');
-    ctx.translate(canvas.clientWidth / 2,canvas.clientHeight); 
-    let s = Math.max(canvas.width/1600, canvas.height/900);
-    ctx.scale(s,s);
-    ctx.translate(0,-300); 
-
 
     for (let i=1;i<=7;i++){
         let image = new Image();
@@ -462,7 +457,11 @@ function advanceTime(deltaMs) {
 function draw() {
     // Clear canvas
     ctx.clearRect(0,0,canvas.width,canvas.height);
-
+    ctx.save();
+    let s = Math.max(canvas.width/1600, canvas.height/900);
+    ctx.translate(canvas.clientWidth / 2,canvas.clientHeight); 
+    ctx.scale(s,s);
+    ctx.translate(0,-300); 
     // // Set line style (optional)
     // ctx.strokeStyle = 'black';
     // ctx.lineWidth = 2;
@@ -504,6 +503,7 @@ function draw() {
         }
     }
 
+    ctx.restore();
 }
 
 function animateJuggler() {
