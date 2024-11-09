@@ -229,7 +229,7 @@ const tutorial = [
     },
 
     {
-        text: "Play with two ⚾️ in your left!",
+        text: "Juggle two balls in your left!",
         check: [
             { ball: 'x', hand: 'left', up: true },
             { ball: 'y', hand: 'left', up: true },
@@ -339,7 +339,7 @@ const tutorial = [
         ]
     },
     {
-        text: "It's a wrap! Get some real ⚾️ and learn juggling for real now.",
+        text: "It's a wrap! Get 3 balls and learn juggling for real now.",
         check: [
             { ball: 'x', hand: 'left', height: 2, up: true },
             { ball: 'y', hand: 'right', height: 0 },
