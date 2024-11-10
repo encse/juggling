@@ -4,12 +4,14 @@ let ctx = canvas.getContext('2d');
 const gravity = 0.9
 const verticalSpeeds = [5, 20, 25];
 
-let juggler =  {
+let juggler = {
+    streak: 0,
+    mood: 'regular',
     x: 0,
     y: 0,
     handRadius: 30,
     hands: {
-        left: { x: -100, y: 180, dx: 0, dy: 0, active: false, phase: 0, amplitude: 10},
+        left: { x: -100, y: 180, dx: 0, dy: 0, active: false, phase: 0, amplitude: 10 },
         right: { x: 130, y: 180, dx: 0, dy: 0, active: false, phase: 90, amplitude: 10 }
     },
     face: {
@@ -17,9 +19,13 @@ let juggler =  {
         y: -300,
         width: 466,
         height: 600,
-        imgIndex: 0,
-        images:[],
-    }
+        imgIndex: 1,
+        images: {
+            dropped: [],
+            regular: [],
+            smile: [],
+        }
+    },
 }
 
 const keyMap = {
@@ -43,7 +49,6 @@ let balls = [];
 let tutorialStep = -1;
 let throwHistory = [];
 let lastTime = 0;
-let streak = 0;
 
 const tutorial = [
     {
@@ -359,13 +364,21 @@ function initCanvas() {
 
     ctx = canvas.getContext('2d');
 
-    for (let i=1;i<=7;i++){
+    const loadImage = (url, appendTo) => {
         let image = new Image();
         image.onload = () => {
-            juggler.face.images.push(image);
+            appendTo.push(image);
         }
-        image.src = `face${i}.svg`;
+        image.src = url;
     }
+    loadImage("faceO.svg", juggler.face.images.dropped);
+    loadImage("faceA1.svg", juggler.face.images.regular);
+    loadImage("faceA2.svg", juggler.face.images.regular);
+    loadImage("faceA3.svg", juggler.face.images.regular);
+    loadImage("faceB1.svg", juggler.face.images.smile);
+    loadImage("faceB2.svg", juggler.face.images.smile);
+    loadImage("faceB3.svg", juggler.face.images.smile);
+
 
     leftHand = new Image();
     leftHand.onload = () => {
@@ -379,7 +392,7 @@ function initCanvas() {
         juggler.hands.right.img = rightHand;
     }
     rightHand.src = `righthand.svg`;
-    
+
 
     balls = [
         { id: "a", x: 0, y: 0, vx: 0, vy: 0, radius: 20, caught: true, hand: 'left', color: "#f12f34" },
@@ -400,17 +413,17 @@ function closeToHand(ball, hand) {
 // Update balls
 function advanceTime(deltaMs) {
 
-    for(; deltaMs > 0; deltaMs -=16){
+    for (; deltaMs > 0; deltaMs -= 16) {
         dt = deltaMs >= 16 ? 16 : deltaMs;
 
-        for(let khand of ['left','right']) {
+        for (let khand of ['left', 'right']) {
             let hand = juggler.hands[khand];
 
             hand.amplitude = Math.max(0, hand.amplitude * 0.8);
             hand.phase++;
             let sign = khand == 'left' ? 1 : -1;
-            hand.dx = sign * hand.amplitude *Math.cos(4*hand.phase/180*Math.PI ); 
-            hand.dy = -3* hand.amplitude *Math.sin(4*hand.phase/180*Math.PI );
+            hand.dx = sign * hand.amplitude * Math.cos(4 * hand.phase / 180 * Math.PI);
+            hand.dy = -3 * hand.amplitude * Math.sin(4 * hand.phase / 180 * Math.PI);
         }
 
         for (let ball of balls) {
@@ -423,9 +436,9 @@ function advanceTime(deltaMs) {
                     ball.y = juggler.hands.right.y + juggler.hands.right.dy;
                 }
             } else {
-                ball.vy += gravity * dt/16;
-                ball.x += ball.vx * dt/16;
-                ball.y += ball.vy * dt/16;
+                ball.vy += gravity * dt / 16;
+                ball.x += ball.vx * dt / 16;
+                ball.y += ball.vy * dt / 16;
 
                 // Ball off-screen - Game over logic could be added here
                 if (ball.y > canvas.clientHeight) {
@@ -444,7 +457,13 @@ function advanceTime(deltaMs) {
 
                         const reset = balls.filter(ball => ball.caught && ball.hand === hand).length > 1;
                         if (reset) {
-                            streak = 0;
+                            juggler.streak = 0;
+                            setMood();
+                        } else {
+                            juggler.streak++;
+                            if (juggler.streak % 5 == 0) {
+                                createFloatingLabel(juggler.streak, canvas.width / 2, canvas.height / 2);
+                            }
                         }
                     }
                 }
@@ -456,12 +475,12 @@ function advanceTime(deltaMs) {
 // Render the juggler and balls
 function draw() {
     // Clear canvas
-    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.save();
-    let s = Math.max(canvas.width/1600, canvas.height/900);
-    ctx.translate(canvas.clientWidth / 2,canvas.clientHeight); 
-    ctx.scale(s,s);
-    ctx.translate(0,-300); 
+    let s = Math.max(canvas.width / 1600, canvas.height / 900);
+    ctx.translate(canvas.clientWidth / 2, canvas.clientHeight);
+    ctx.scale(s, s);
+    ctx.translate(0, -300);
     // // Set line style (optional)
     // ctx.strokeStyle = 'black';
     // ctx.lineWidth = 2;
@@ -479,12 +498,13 @@ function draw() {
     // ctx.stroke();
 
 
-    if (juggler.face.images.length > 0) {
-        let img = juggler.face.images[juggler.face.imgIndex % juggler.face.images.length];
+    let faceImages = juggler.face.images[juggler.mood];
+    if (faceImages.length > 0) {
+        let img = faceImages[juggler.face.imgIndex % faceImages.length];
         ctx.drawImage(img, juggler.x + juggler.face.x, juggler.y + juggler.face.y, juggler.face.width, juggler.face.height);
     }
 
-   
+
     // Draw balls
     balls.forEach(ball => {
         ctx.fillStyle = ball.color;
@@ -494,11 +514,11 @@ function draw() {
     });
 
     const handSize = 70;
-    for(let hand of [juggler.hands.left, juggler.hands.right]) {
+    for (let hand of [juggler.hands.left, juggler.hands.right]) {
         if (hand.img) {
             ctx.save();
-            ctx.translate(hand.x+hand.dx- handSize/2, hand.y+hand.dy-handSize/3)
-            ctx.drawImage(hand.img, 0,0, handSize,handSize*.75);
+            ctx.translate(hand.x + hand.dx - handSize / 2, hand.y + hand.dy - handSize / 3)
+            ctx.drawImage(hand.img, 0, 0, handSize, handSize * .75);
             ctx.restore();
         }
     }
@@ -506,7 +526,19 @@ function draw() {
     ctx.restore();
 }
 
+
+function setMood() {
+    if (juggler.streak == 0 && juggler.mood == 'smile') {
+        juggler.mood = 'dropped'
+    } else if (juggler.streak < 10) {
+        juggler.mood = 'regular';
+    } else {
+        juggler.mood = 'smile';
+    }
+}
+
 function animateJuggler() {
+    setMood();
     juggler.face.imgIndex++;
 }
 
@@ -535,7 +567,7 @@ function releaseBall(hand, height, outer, up) {
             ball.x = juggler.hands[hand].x + (hand == "left" ? dx : -dx);
 
             juggler.hands[hand].phase = 0;
-            juggler.hands[hand].amplitude =10;
+            juggler.hands[hand].amplitude = 10;
             if (up) {
                 dx = juggler.hands[hand].x - ball.x
             } else {
@@ -546,11 +578,6 @@ function releaseBall(hand, height, outer, up) {
 
             ball.caught = false;
             ball.hand == "";
-            streak += 1;
-
-            if (streak % 5 == 0) {
-                createFloatingLabel(streak, canvas.width/2, canvas.height/2);
-            }
             throwHistory.push({ "ball": ball.id, hand, height, outer, up });
             break;
         }
