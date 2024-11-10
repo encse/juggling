@@ -3,6 +3,7 @@ let ctx = canvas.getContext('2d');
 
 const gravity = 0.9
 const verticalSpeeds = [5, 20, 25];
+let boredTimer = Date.now();
 
 let juggler = {
     streak: 0,
@@ -24,6 +25,7 @@ let juggler = {
             dropped: [],
             regular: [],
             smile: [],
+            eyesclosed: [],
         }
     },
 }
@@ -378,6 +380,9 @@ function initCanvas() {
     loadImage("faceB1.svg", juggler.face.images.smile);
     loadImage("faceB2.svg", juggler.face.images.smile);
     loadImage("faceB3.svg", juggler.face.images.smile);
+    loadImage("faceC1.svg", juggler.face.images.eyesclosed);
+    loadImage("faceC2.svg", juggler.face.images.eyesclosed);
+    loadImage("faceC3.svg", juggler.face.images.eyesclosed);
 
 
     leftHand = new Image();
@@ -459,11 +464,6 @@ function advanceTime(deltaMs) {
                         if (reset) {
                             juggler.streak = 0;
                             setMood();
-                        } else {
-                            juggler.streak++;
-                            if (juggler.streak % 5 == 0) {
-                                createFloatingLabel(juggler.streak, canvas.width / 2, canvas.height / 2);
-                            }
                         }
                     }
                 }
@@ -528,13 +528,17 @@ function draw() {
 
 
 function setMood() {
-    if (juggler.streak == 0 && juggler.mood == 'smile') {
+    if (juggler.streak == 0 && (juggler.mood == 'smile' || juggler.mood == 'eyesclosed')) {
         juggler.mood = 'dropped'
     } else if (juggler.streak < 10) {
         juggler.mood = 'regular';
-    } else {
-        juggler.mood = 'smile';
-    }
+    } else { 
+        if (Math.random() < 0.2) {
+            juggler.mood = 'eyesclosed';
+        } else {
+            juggler.mood = 'smile';
+        } 
+    } 
 }
 
 function animateJuggler() {
@@ -543,7 +547,18 @@ function animateJuggler() {
 }
 
 
-function releaseBall(hand, height, outer, up) {
+function bored() {
+    if (Date.now() - boredTimer > 5000){
+        for(let ball of balls) {
+            if (ball.caught) {
+                releaseBall(ball.hand, 2, true, true, true);
+                break;
+            }
+        }
+    }
+}
+
+function releaseBall(hand, height, outer, up, autoshoot) {
     let vx = balls.length % 2 == 0 ? 0 : 1;
     let vy;
     let dx = outer ? -15 : 15;
@@ -578,7 +593,14 @@ function releaseBall(hand, height, outer, up) {
 
             ball.caught = false;
             ball.hand == "";
-            throwHistory.push({ "ball": ball.id, hand, height, outer, up });
+            if (!autoshoot){
+                throwHistory.push({ "ball": ball.id, hand, height, outer, up });
+                juggler.streak++;
+                if (juggler.streak % 5 == 0) {
+                    createFloatingLabel(juggler.streak, canvas.width / 2, canvas.height / 2);
+                }
+            }
+            boredTimer = Date.now();
             break;
         }
     }
@@ -640,6 +662,7 @@ function match(step) {
 
 function advanceTutorial(back) {
     throwHistory.splice(0);
+    throwHistory.push({time: Date.now()})
 
     if (back) {
         tutorialStep = Math.max(0, tutorialStep - 1);
@@ -668,7 +691,7 @@ document.addEventListener('keydown', function (e) {
     up = e.shiftKey ^ e.getModifierState("CapsLock");
     combo = keyMap[e.code]
     if (combo) {
-        releaseBall(combo.hand, combo.height, combo.outer, up);
+        releaseBall(combo.hand, combo.height, combo.outer, up, false);
         return true;
     }
 });
@@ -704,7 +727,11 @@ function createFloatingLabel(number, x, y) {
 
 setInterval(() => {
     animateJuggler();
-}, 3000);
+}, 1000);
+
+setInterval(() => {
+    bored();
+}, 1000);
 
 initCanvas();
 advanceTutorial();
