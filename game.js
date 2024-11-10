@@ -560,7 +560,7 @@ function releaseBall(hand, height, outer, up) {
 
     const otherHand = hand == "left" ? "right" : "left"
 
-    for (let ball of balls.reverse()) {
+    for (let ball of [...balls].reverse()) {
         if (ball.caught && ball.hand === hand) {
             ball.vx = hand == "left" ? vx : -vx;
             ball.vy = -vy;
